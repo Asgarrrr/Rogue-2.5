@@ -1,35 +1,81 @@
-import React, { useCallback, useEffect, useRef } from "react";
+import { useCallback, useContext, useEffect, useRef, useState } from "react";
 
 import Game from "./Game";
+// import SocketProvider, { useSocketSubscribe, SocketContext } from "./Socket/SocketProvider";
 
+import { SocketProvider, useSocket } from "./Socket/SocketProvider";
 export default function App() {
-	const canvasRef = useRef<HTMLCanvasElement>(null);
 
-	const init = useCallback(async () => {
-		const canvas = canvasRef.current;
-		const game = new Game();
-		return await game.init({
-			preference: "webgpu",
-			resolution: window.devicePixelRatio || 1,
-			backgroundColor: 0x1099bb,
-			resizeTo: window,
-			canvas: canvas!,
-		});
-	}, []);
+	const socket = useSocket();
 
 	useEffect(() => {
+		console.log(socket);
+	}, [socket]);
+
+	const canvasRef = useRef<HTMLCanvasElement>(null);
+	
+	const init = useCallback(async () => {
+
+		const canvas = canvasRef.current;
+
+		if ( socket ) {
+			
+			await socket.connect();
+			const game = new Game({ socket });
+
+			return await game.init({
+				preference: "webgpu",
+				resolution: window.devicePixelRatio || 1,
+				backgroundColor: 0x1099bb,
+				resizeTo: window,
+				canvas: canvas!,
+			});
+
+		}
+	}, [socket]); 
+
+	// useEffect(() => {
+
+	// 	// if ( socket ) {
+	// 	// 	console.log("dede");
+	// 	// 	setSocketConnected( true );
+	// 	// }
+	
+	// 	// return () => {
+	// 	// 	if ( socket )
+	// 	// 		socket.removeAllListeners();
+	// 	// };
+
+	// }, [ socket ]);
+
+	useEffect(() => {
+
+		console.log(socket);	
+
+		console.log("App mounted");
+
 		const app = init();
 		return () => {
-			app.then((game) => game.stop());
+			app?.then( ( game ) => game && game.stop() );
 		};
-	}, [init]);
+
+	}, [ socket ]);
 
 	return (
-		<canvas ref={canvasRef}>
-			Votre navigateur ne supporte pas l'élément canvas
-		</canvas>
+		<SocketProvider url="ws://localhost:3000">
+			<Test />
+			<canvas ref={canvasRef}>
+				Votre navigateur ne supporte pas l'élément canvas
+			</canvas>
+		</SocketProvider>
 	);
 }
+
+const Test = () => {
+	const socket = useSocket();
+	console.log(socket);
+	return <div>Test</div>;
+};
 
 // import React, { useEffect, useRef } from "react";
 // import { Application, Container } from "pixi.js";

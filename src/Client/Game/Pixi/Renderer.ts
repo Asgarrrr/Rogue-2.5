@@ -1,21 +1,23 @@
-import { Application, ApplicationOptions } from "pixi.js";
+import { Application, ApplicationOptions, Container } from "pixi.js";
 
 export enum Layer {
-	BACKGROUND,
-	ENTITIES,
 	WORLD,
+	ENTITIES,
+	EFFECTS,
 	UI,
 }
 
 export default class Renderer {
+	
 	public app: Application;
-	// private layers: Container[] = [];
+	private layers: Container[] = [];
 
 	constructor() {
 		this.app = new Application();
-		return this;
+		(globalThis as any).__PIXI_APP__ = this.app;
+		this.layers = Array.from({ length: Object.keys( Layer).length / 2 }).map(() => new Container( ));
+		this.layers.forEach((layer) => this.app.stage.addChild(layer));
 
-		// this.layers = Array.from({ length: 4 }).map(() => new Container());
 	}
 
 	public async init(
@@ -30,6 +32,7 @@ export default class Renderer {
 	}
 
 	public destroy(): void {
-		if (this.app) this.app.destroy();
+		if ( this.app ) 
+			this.app.destroy();
 	}
 }

@@ -1,14 +1,18 @@
 import { ApplicationOptions } from "pixi.js";
 import ECSManager from "./Core/ECSManager";
 import Renderer from "./Pixi/Renderer";
+import { Socket } from "socket.io-client";
 
 export default class Game {
 	private ecs: ECSManager;
 	private rnd: Renderer;
+	private socket: Socket;
 
-	constructor() {
+	constructor({ socket }: { socket: Socket }) {
 		this.ecs = ECSManager.getInstance();
 		this.rnd = new Renderer();
+		this.socket = socket;
+
 		return this;
 	}
 

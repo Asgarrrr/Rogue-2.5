@@ -4,11 +4,15 @@
 	"version": "0.0.0",
 	"type": "module",
 	"scripts": {
-		"dev": "bun ./src",
+		"dev": "vite",
 		"build": "tsc -b && vite build",
+		"start:server": "bun --watch ./src/Server",
+		"start:client": "vite preview",
+		"start": "bun --concurrent start:server && bun start:client",
 		"lint": "eslint .",
-		"preview": "vite preview"
+		"preview": "bun ./dist"
 	},
+
 	"dependencies": {
 		"@types/express": "^4.17.21",
 		"@types/uuid": "^10.0.0",
@@ -18,9 +22,9 @@
 		"react": "^18.3.1",
 		"react-dom": "^18.3.1",
 		"socket.io": "^4.7.5",
+		"socket.io-client": "^4.7.5",
 		"utf-8-validate": "^6.0.4",
-		"uuid": "^10.0.0",
-		"vite-express": "^0.18.0"
+		"uuid": "^10.0.0"
 	},
 	"devDependencies": {
 		"@eslint/js": "^9.9.0",
