@@ -31,10 +31,12 @@ class Game {
 		
 		console.log( "%cWebsocket connected", "color: #00FF00" );
 
+		
 
 		const player = this.ecs.createEntity( );
 		this.ecs.addComponent( player, "Position", { x: 0, y: 0 });
-		this.ecs.addComponent( player, "Velocity", { x: 1, y: 1 });	
+		this.ecs.addComponent( player, "Velocity", { x: 1, y: 1 });
+		
 
 		this.ecs.addSystem([
 			new MovementSystem( ),

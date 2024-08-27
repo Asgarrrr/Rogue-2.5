@@ -3,6 +3,13 @@ import express from "express";;
 import { Server } from "socket.io";
 import { createServer } from "http";
 
+import test from "./Stage/Dungeon";
+
+
+const t = new test( { density: 0.3 } ).generate();
+t.next()
+
+
 const app = express();
 const httpServer = createServer(app);
 const io = new Server(httpServer, {
