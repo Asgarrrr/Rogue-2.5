@@ -1,150 +1,128 @@
+import { RNG } from "../Utils";
 
 import Room from "./Room";
+import Tile, { TileType } from "./Tile";
+const canvass = require('@napi-rs/canvas')
 
 export default class Dungeon {
 
-    private iterations  : number = 100;
-    private density     : number = 0.3;
+    public width: number;
+    public height: number;
+    public tiles: Tile[][];
+    public rooms: Room[] = [];
 
-    private rooms: Room[] = [];
-    private tiles: number[][] = [];
-    
-    // —— Count of carved tiles (tiles that are not walls)
-    private carvedTiles: number = 0;
-    
-    public width : number = 100;
-    public height: number = 100;
-
-    
-
-
-    
-    constructor({ density }: { density: number }) {
-
-
-        this.density = density;
-    }
-    
-
-    *generate(): Generator<Room> {
-        
-        let failed = 0;
-
-        while ( this.carvedDensity < this.density && failed < this.iterations ) {
-
-            const room = new Room( );
-
-            let placed = false;
-
-            if ( this.placeRoomInAvailableSpace( room ) )
-                yield room;
-            else
-                failed++;
-
-        }
-
-
-            // for ( let i = 0; i < 400; i++ ) {
-
-            // }
-
-
-            // const x = Math.floor( Math.random() * this.width );
-            // const y = Math.floor( Math.random() * this.height );
-
-            // if ( this.canPlaceRoom({ room, x, y }) ) {
-            //     this.carvedTiles += room.width * room.height;
-            //     yield room;
-            // } else {
-            //     failed++;
-
-    } 
-
-
-    private canPlaceRoom({ 
-        room,
-        x,
-        y, 
+    constructor({
+        width,
+        height,
+        density,
     }: {
-        room: Room;
-        x: number;
-        y: number;
-    }): boolean {
-        
-        for (let i = 0; i < room.width; i++) {
-            for (let j = 0; j < room.height; j++) {
-                if (Math.random() < this.density) {
-                    return false;
+        width   : number;
+        height  : number;
+        density?: number;
+    }) {
+
+        this.width  = width;
+        this.height = height;
+        this.tiles  = Array( height ).fill( null ).map( ( _, y ) => 
+            Array( width ).fill( null ).map( ( _, x ) => new Tile( TileType.EMPTY, x, y ) )
+        );
+
+        const numRooms = RNG.inclusive( 5, 10 );
+        console.log(numRooms)
+        for ( let i = 0; i < numRooms; i++ ) {
+            
+            const room = new Room();
+            this.rooms.push( room );
+
+        }
+
+        this.placeRooms({ density: 0.5 });
+
+        // Export the dungeon to a canvas
+        const canvas = canvass.createCanvas( this.width * 10, this.height * 10 )
+        const ctx = canvas.getContext('2d')
+        for ( const room of this.rooms ) {
+            console.log("room", "x", room.position.x, "y", room.position.y)
+            // paint the room in different colors for each shape
+            room.shape === 0 ? ctx.fillStyle = 'red' : room.shape === 1 ? ctx.fillStyle = 'blue' : room.shape === 2 ? ctx.fillStyle = 'green' : ctx.fillStyle = 'yellow'
+            console.log(room.shape)
+            for ( let y = 0; y < room.height; y++ ) {
+                for ( let x = 0; x < room.width; x++ ) {
+                    ctx.fillRect((room.position.x + x) * 10, (room.position.y + y) * 10, 10, 10)
                 }
             }
         }
+        canvas.encode('png').then((data: any) => {
+            require('fs').writeFileSync('dungeon.png', data )
+        })
 
+        
     }
 
-    private placeRoomInAvailableSpace( room: Room ): boolean {
-        
-        let bestPosition: { x: number; y: number } | null = null
-          , maxDistance = 0;
-    
-        for ( let x = 1; x < this.width - room.width; x++ ) {
-            for ( let y = 1; y < this.height - room.height; y++ ) {
-                if ( this.canPlaceRoom({ room, x, y }) ) {
+    private placeRooms({ density }: { density: number }) {
+
+        // TODO: Implement density logic
+
+        for ( const room of this.rooms ) {
+            
+            let attempts = 0;
+
+            while ( attempts < 2000 ) {
                 
-                    const distance = this.calculateDistanceToOtherRooms({ x, y });
+                const x = RNG.inclusive( 1, this.width - room.width - 1 )
+                    , y = RNG.inclusive( 1, this.height - room.height - 1 );
+
+                if ( this.canPlaceRoom( room, x, y ) ) {
                     
-                    if ( distance > maxDistance ) {
+                    room.position = { x, y };
+                    this.addRoomToDungeon( room );
+                    break;
 
-                        maxDistance = distance;
-                        bestPosition = { x, y };
-
-                    }
-                
                 }
+
+                attempts++;
+
+            }
+
+            console.log( room.position );
+
+        }
+
+    }
+
+    private canPlaceRoom( room: Room, x: number, y: number ): boolean {
+
+        for ( let dy = -1; dy <= room.height; dy++ ) {
+            for ( let dx = -1; dx <= room.width; dx++ ) {
+
+                const tileX = x + dx
+                    , tileY = y + dy;
+                
+                if (  tileX < 0 
+                   || tileX >= this.width
+                   || tileY < 0 
+                   || tileY >= this.height 
+                   || this.tiles[ tileY ][ tileX ].type !== TileType.EMPTY )
+                   return false;
+                
             }
         }
-    
-        if ( bestPosition ) {
-            this.carveRoom({ room, x: bestPosition.x, y: bestPosition.y });
-            return true;
-        }
 
-        return false;
+        return true;
+    
+    }
+
+    private addRoomToDungeon( room: Room ) {
+            
+            for ( let y = 0; y < room.height; y++ ) {
+                for ( let x = 0; x < room.width; x++ ) {
+                    
+                    const tile = room.tiles[ y ][ x ]
+                    this.tiles[ room.position.y + y ][ room.position.x + x ] = tile;
+    
+                }
+            }
 
     }
 
-    private carveRoom({ 
-        room, 
-        x, 
-        y 
-    }: { 
-        room: Room; 
-        x: number; 
-        y: number 
-    }): void {
-
-        for ( const pos of room.bounds ) {
-
-            const here = { 
-                x: pos.x + x, 
-                y: pos.y + y 
-            };
-
-        }
-
-
-
-    }
-
-
-
-    get carvedDensity(): number {
-        return this.carvedTiles / ( this.width - 2 * this.height - 2 );
-    }
-
-    
-
-    
-    
-    
-    
 }
