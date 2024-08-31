@@ -3,11 +3,12 @@ import express from "express";;
 import { Server } from "socket.io";
 import { createServer } from "http";
 
-import test from "./Stage/Dungeon";
+import Dungeon from "./Stage/Dungeon";
 
-
-const t = new test( { density: 0.3 } ).generate();
-t.next()
+const t = new Dungeon({
+    width: 100,
+    height: 100,
+});
 
 
 const app = express();
