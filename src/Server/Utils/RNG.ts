@@ -1,5 +1,7 @@
 export default class RNG {
 
+    // —— Simple methods to generate random numbers or pick random elements from arrays
+
     // Returns a random number between min (inclusive) and max (inclusive)
     static inclusive(min: number, max: number): number {
         return Math.floor( Math.random() * ( max - min + 1 ) + min );
@@ -37,6 +39,17 @@ export default class RNG {
     // Returns a random element from an array and removes it
     static pickSome<T>(array: T[], amount: number): T[] {
         return RNG.shuffle(array).slice(0, amount);
+    }
+
+    // —— Generates a random UUID
+    static generateUUID( ): string {
+
+        return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace( /[xy]/g, ( c ) => {
+            const r = Math.random() * 16 | 0
+                , v = c === 'x' ? r : ( r & 0x3 | 0x8 );
+            return v.toString( 16 );
+        });
+
     }
 
 }
